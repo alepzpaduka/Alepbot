@@ -1,0 +1,19 @@
+{
+  "name": "vorahub-discord-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Port of bot.py (discord.py) to discord.js",
+  "main": "bot.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node bot.js",
+    "dev": "node --watch bot.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.5"
+  }
+}
