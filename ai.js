@@ -1,7 +1,8 @@
 /**
  * AlepzBot — AI Module
  * Owner: Mr. Kholis
- * Version: 2.0.2 (DeepSeek Support)
+ * Version: 2.0.3 (Full - DeepSeek + Fallback)
+ * Support: DeepSeek, OpenAI, Google Gemini
  */
 
 const { OpenAI } = require('openai');
@@ -63,96 +64,170 @@ async function chatWithAI(userMessage, history = []) {
 
   try {
     let response = '';
+    let lastError = null;
 
-    // ===== DEEPSEEK =====
+    // ===== DEEPSEEK (Primary) =====
     if (AI_PROVIDER === 'deepseek' && deepseek) {
-      console.log(`[AI] Menggunakan DeepSeek model: ${AI_MODEL}`);
-      
-      const completion = await deepseek.chat.completions.create({
-        model: AI_MODEL || 'deepseek-v4-flash',
-        messages: messages,
-        max_tokens: parseInt(process.env.AI_MAX_TOKENS) || 1000,
-        temperature: parseFloat(process.env.AI_TEMPERATURE) || 0.7
-      });
-      response = completion.choices[0].message.content;
-      return response;
+      try {
+        console.log(`[AI] 🚀 Menggunakan DeepSeek model: ${AI_MODEL}`);
+        
+        const completion = await deepseek.chat.completions.create({
+          model: AI_MODEL || 'deepseek-v4-flash',
+          messages: messages,
+          max_tokens: parseInt(process.env.AI_MAX_TOKENS) || 1000,
+          temperature: parseFloat(process.env.AI_TEMPERATURE) || 0.7
+        });
+        response = completion.choices[0].message.content;
+        console.log(`[AI] ✅ DeepSeek berjaya!`);
+        return response;
+        
+      } catch (error) {
+        lastError = error;
+        console.log(`[AI] ❌ DeepSeek gagal:`, error.message);
+        
+        // Handle 402 Insufficient Balance - Cuba fallback ke Gemini
+        if (error.status === 402 || error.message?.includes('Insufficient Balance')) {
+          console.log(`[AI] 💰 Baki DeepSeek habis! Cuba fallback ke Gemini...`);
+          
+          if (gemini) {
+            try {
+              console.log(`[AI] 🔄 Fallback ke Gemini...`);
+              for (const modelName of GEMINI_MODELS) {
+                try {
+                  const model = gemini.getGenerativeModel({ model: modelName });
+                  const geminiHistory = history.map(h => ({
+                    role: h.role === 'user' ? 'user' : 'model',
+                    parts: [{ text: h.content }]
+                  }));
+                  const chat = model.startChat({ history: geminiHistory });
+                  const result = await chat.sendMessage(userMessage);
+                  response = result.response.text();
+                  console.log(`[AI] ✅ Gemini ${modelName} berjaya!`);
+                  return response;
+                } catch (geminiError) {
+                  console.log(`[AI] ❌ Gemini ${modelName} gagal:`, geminiError.message);
+                  continue;
+                }
+              }
+              throw new Error('Semua model Gemini gagal');
+            } catch (fallbackError) {
+              lastError = fallbackError;
+            }
+          } else {
+            throw new Error('Baki DeepSeek habis dan tiada fallback provider. Sila topup atau tambah GEMINI_API_KEY di .env');
+          }
+        }
+        
+        throw error;
+      }
     }
 
     // ===== OPENAI =====
     else if (AI_PROVIDER === 'openai' && openai) {
-      console.log(`[AI] Menggunakan OpenAI model: ${AI_MODEL}`);
-      
-      const completion = await openai.chat.completions.create({
-        model: AI_MODEL || 'gpt-3.5-turbo',
-        messages: messages,
-        max_tokens: parseInt(process.env.AI_MAX_TOKENS) || 1000,
-        temperature: parseFloat(process.env.AI_TEMPERATURE) || 0.7
-      });
-      response = completion.choices[0].message.content;
-      return response;
+      try {
+        console.log(`[AI] 🚀 Menggunakan OpenAI model: ${AI_MODEL}`);
+        
+        const completion = await openai.chat.completions.create({
+          model: AI_MODEL || 'gpt-3.5-turbo',
+          messages: messages,
+          max_tokens: parseInt(process.env.AI_MAX_TOKENS) || 1000,
+          temperature: parseFloat(process.env.AI_TEMPERATURE) || 0.7
+        });
+        response = completion.choices[0].message.content;
+        console.log(`[AI] ✅ OpenAI berjaya!`);
+        return response;
+        
+      } catch (error) {
+        lastError = error;
+        console.log(`[AI] ❌ OpenAI gagal:`, error.message);
+        
+        // Cuba fallback ke Gemini jika OpenAI gagal
+        if (gemini) {
+          console.log(`[AI] 🔄 Fallback ke Gemini...`);
+          try {
+            for (const modelName of GEMINI_MODELS) {
+              try {
+                const model = gemini.getGenerativeModel({ model: modelName });
+                const geminiHistory = history.map(h => ({
+                  role: h.role === 'user' ? 'user' : 'model',
+                  parts: [{ text: h.content }]
+                }));
+                const chat = model.startChat({ history: geminiHistory });
+                const result = await chat.sendMessage(userMessage);
+                response = result.response.text();
+                console.log(`[AI] ✅ Gemini ${modelName} berjaya!`);
+                return response;
+              } catch (geminiError) {
+                continue;
+              }
+            }
+          } catch (fallbackError) {
+            lastError = fallbackError;
+          }
+        }
+        throw error;
+      }
     }
 
     // ===== GOOGLE GEMINI =====
     else if (AI_PROVIDER === 'gemini' && gemini) {
-      console.log(`[AI] Menggunakan Gemini...`);
-      
-      let lastError = null;
-      let modelSuccess = false;
+      try {
+        console.log(`[AI] 🚀 Menggunakan Gemini...`);
+        let modelSuccess = false;
 
-      for (const modelName of GEMINI_MODELS) {
-        try {
-          console.log(`[AI] Mencuba model: ${modelName}...`);
-          
-          const model = gemini.getGenerativeModel({ model: modelName });
-          
-          const geminiHistory = history.map(h => ({
-            role: h.role === 'user' ? 'user' : 'model',
-            parts: [{ text: h.content }]
-          }));
-
-          const chat = model.startChat({ history: geminiHistory });
-          const result = await chat.sendMessage(userMessage);
-          response = result.response.text();
-          modelSuccess = true;
-          console.log(`[AI] ✅ Model ${modelName} berjaya!`);
-          break;
-
-        } catch (error) {
-          lastError = error;
-          console.log(`[AI] ❌ Model ${modelName} gagal:`, error.message || error.status);
-          if (error.status === 404 || error.message?.includes('not found')) {
+        for (const modelName of GEMINI_MODELS) {
+          try {
+            console.log(`[AI] Mencuba model: ${modelName}...`);
+            const model = gemini.getGenerativeModel({ model: modelName });
+            const geminiHistory = history.map(h => ({
+              role: h.role === 'user' ? 'user' : 'model',
+              parts: [{ text: h.content }]
+            }));
+            const chat = model.startChat({ history: geminiHistory });
+            const result = await chat.sendMessage(userMessage);
+            response = result.response.text();
+            modelSuccess = true;
+            console.log(`[AI] ✅ Model ${modelName} berjaya!`);
+            break;
+          } catch (error) {
+            console.log(`[AI] ❌ Model ${modelName} gagal:`, error.message);
             continue;
           }
-          continue;
         }
-      }
 
-      if (!modelSuccess || !response) {
-        throw lastError || new Error('Semua model Gemini gagal.');
+        if (!modelSuccess || !response) {
+          throw new Error('Semua model Gemini gagal');
+        }
+        return response;
+        
+      } catch (error) {
+        lastError = error;
+        throw error;
       }
-      return response;
     }
 
     // ===== FALLBACK =====
     else {
-      return '🤖 **AlepzBot AI:** Maaf, perkhidmatan AI sedang tidak tersedia. Sila semak konfigurasi API key.';
+      return '🤖 **AlepzBot AI:** Maaf, perkhidmatan AI sedang tidak tersedia. Sila semak konfigurasi API key di .env';
     }
 
   } catch (error) {
-    console.error('[AI] Error:', error);
+    console.error('[AI] ❌ Error:', error.message);
     
     let userMessage = 'Maaf, berlaku ralat. Sila cuba lagi nanti.';
     
-    if (error.message?.includes('API key')) {
+    if (error.message?.includes('API key') || error.message?.includes('authentication')) {
       userMessage = 'Maaf, API key tidak sah. Sila semak konfigurasi .env';
-    } else if (error.message?.includes('quota') || error.message?.includes('insufficient')) {
-      userMessage = 'Maaf, kuota API telah habis. Sila cuba esok.';
+    } else if (error.message?.includes('quota') || error.message?.includes('insufficient') || error.message?.includes('balance')) {
+      userMessage = 'Maaf, baki atau kuota API telah habis. Sila topup atau tukar provider.';
     } else if (error.message?.includes('network') || error.message?.includes('ECONNREFUSED')) {
       userMessage = 'Maaf, masalah sambungan internet. Sila semak sambungan anda.';
     } else if (error.message?.includes('404') || error.message?.includes('not found')) {
       userMessage = 'Maaf, model AI tidak ditemui. Sila semak konfigurasi model.';
-    } else if (error.message?.includes('rate limit')) {
+    } else if (error.message?.includes('rate limit') || error.message?.includes('too many')) {
       userMessage = 'Maaf, terlalu banyak permintaan. Sila tunggu sebentar.';
+    } else if (error.message?.includes('timeout')) {
+      userMessage = 'Maaf, permintaan mengambil masa terlalu lama. Sila cuba lagi.';
     }
     
     return `🤖 **AlepzBot AI:** ${userMessage}`;
