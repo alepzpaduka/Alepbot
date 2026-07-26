@@ -2,7 +2,7 @@
  * AlepzBot — Discord Bot
  * Owner: Mr. Kholis
  * Version: 2.0.0 (Full)
- * Description: Sistem tiket, moderation, cooldown, welcome, leave, activity
+ * Description: Sistem tiket, moderation, cooldown, welcome, leave, activity, AI
  */
 
 require('dotenv').config();
@@ -26,6 +26,7 @@ const ticketHandlers = require('./ticketHandlers');
 const { sendTicketPanel } = require('./ticketPanel');
 const { sendWelcomeMessage, testWelcome } = require('./welcome');
 const { sendLeaveMessage, testLeave } = require('./leave');
+const { chatWithContext, clearAIHistory, testAI } = require('./ai');
 
 const TOKEN = process.env.DISCORD_TOKEN;
 if (!TOKEN) {
@@ -41,6 +42,20 @@ function buildSlashCommands() {
       .setName('chat')
       .setDescription('Chat Anything With A Bot.')
       .addStringOption((o) => o.setName('messages').setDescription('Message').setRequired(true))
+      .toJSON(),
+    new SlashCommandBuilder()
+      .setName('ai')
+      .setDescription('Chat dengan AI AlepzBot')
+      .addStringOption((o) =>
+        o.setName('message')
+          .setDescription('Mesej anda')
+          .setRequired(true)
+          .setMaxLength(2000)
+      )
+      .toJSON(),
+    new SlashCommandBuilder()
+      .setName('aiclear')
+      .setDescription('Kosongkan history chat AI')
       .toJSON(),
     new SlashCommandBuilder()
       .setName('kick')
@@ -94,6 +109,10 @@ function buildSlashCommands() {
     new SlashCommandBuilder()
       .setName('testleave')
       .setDescription('[TEST] Hantar mesej selamat tinggal')
+      .toJSON(),
+    new SlashCommandBuilder()
+      .setName('testai')
+      .setDescription('[TEST] Uji sambungan AI')
       .toJSON()
   ];
 }
@@ -118,6 +137,52 @@ async function handleSlash(interaction) {
 
   if (commandName === 'chat') {
     await interaction.reply(interaction.options.getString('messages', true));
+    return;
+  }
+
+  // ===== AI CHAT =====
+  if (commandName === 'ai') {
+    const message = interaction.options.getString('message', true);
+    await interaction.deferReply({ ephemeral: false });
+
+    try {
+      const response = await chatWithContext(interaction.user.id, message);
+      const finalResponse = response.length > 2000 ? response.slice(0, 1997) + '...' : response;
+      await interaction.editReply(`🤖 **AlepzBot AI:** ${finalResponse}`);
+    } catch (error) {
+      console.error('[AI] Error:', error);
+      await interaction.editReply('❌ Maaf, berlaku ralat. Sila cuba lagi.');
+    }
+    return;
+  }
+
+  // ===== AI CLEAR HISTORY =====
+  if (commandName === 'aiclear') {
+    clearAIHistory(interaction.user.id);
+    await interaction.reply({
+      content: '🧹 **History chat AI telah dikosongkan!**',
+      ephemeral: true
+    });
+    return;
+  }
+
+  // ===== TEST AI =====
+  if (commandName === 'testai') {
+    if (!interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
+      await interaction.reply({ content: '❌ Hanya admin yang boleh guna command ini.', ephemeral: true });
+      return;
+    }
+    await interaction.deferReply({ ephemeral: true });
+    try {
+      const result = await testAI();
+      await interaction.editReply({
+        content: `✅ **AI Test Berjaya!**\n\nResponse: ${result}`
+      });
+    } catch (error) {
+      await interaction.editReply({
+        content: `❌ **AI Test Gagal!**\nError: ${error.message}`
+      });
+    }
     return;
   }
 
@@ -373,31 +438,36 @@ client.once('ready', async () => {
   console.log(`Logged in as ${client.user.tag}`);
   console.log(`[BOT] AlepzBot sedia!`);
   console.log(`[BOT] Welcome & Leave system aktif.`);
+  console.log(`[BOT] AI System aktif.`);
 
   // ===== SET ACTIVITY STATUS =====
-  // Activity 1: AlepBotXFiqqzr7 (Watching)
   client.user.setActivity('AlepBotXFiqqzr7', { type: 4 });
-  
-  // Activity 2: AlepzBot Thebest (Watching) - akan timbul bergilir
   client.user.setActivity('AlepzBot Thebest', { type: 4 });
 
-  // ===== SET PRESENCE =====
   client.user.setPresence({
     status: 'online',
     activities: [
       {
         name: '⚡ AlepBotTheBest',
-        type: 4 // Watching
+        type: 4
       },
       {
         name: 'AlepzBot Thebest',
-        type: 4 // Watching
+        type: 4
       }
     ]
   });
 
   console.log(`[BOT] Activity set: AlepBotXFiqqzr7 & AlepzBot Thebest`);
   console.log(`[BOT] Status: Online`);
+
+  // ===== TEST AI ON STARTUP =====
+  try {
+    await testAI();
+    console.log(`[AI] System berjaya diaktifkan!`);
+  } catch (error) {
+    console.error(`[AI] Gagal diaktifkan:`, error.message);
+  }
 
   const commands = buildSlashCommands();
   const rest = new REST({ version: '10' }).setToken(TOKEN);
