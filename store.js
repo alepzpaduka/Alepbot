@@ -1,6 +1,9 @@
 /**
- * JSON persistence — same files as bot.py (same folder as bot.js).
+ * AlepzBot — Storage Handler
+ * Owner: fiqq
+ * Version: 2.0.0 (Clean)
  */
+
 const fs = require('fs');
 const cfg = require('./config');
 
@@ -18,13 +21,7 @@ function writeJson(path, data) {
   fs.writeFileSync(path, JSON.stringify(data, null, 4), 'utf8');
 }
 
-// --- warns ---
-let warns = readJson(cfg.files.warns, {});
-function saveWarns() {
-  writeJson(cfg.files.warns, warns);
-}
-
-// --- tickets ---
+// ===== TICKETS =====
 let ticketData = readJson(cfg.files.tickets, { counter: 0, tickets: {} });
 let activeTickets = {};
 let ticketCount = 0;
@@ -39,23 +36,7 @@ function saveTickets() {
   writeJson(cfg.files.tickets, { counter: ticketCount, tickets: activeTickets });
 }
 
-// --- midman ---
-let midmanData = readJson(cfg.files.midmanTickets, { counter: 0, tickets: {} });
-let midmanTickets = {};
-let midmanTicketCount = 0;
-if (midmanData.tickets) {
-  midmanTickets = Object.fromEntries(Object.entries(midmanData.tickets).map(([k, v]) => [Number(k), v]));
-  midmanTicketCount = midmanData.counter || 0;
-}
-
-function saveMidmanTickets() {
-  writeJson(cfg.files.midmanTickets, { counter: midmanTicketCount, tickets: midmanTickets });
-}
-
-const midmanSessions = new Map();
-const midmanTicketContext = new Map();
-
-// --- x8 ---
+// ===== X8 TICKETS =====
 let x8Data = readJson(cfg.files.x8Tickets, { counter: 0, tickets: {} });
 let x8Tickets = {};
 let x8TicketCount = 0;
@@ -68,66 +49,27 @@ function saveX8Tickets() {
   writeJson(cfg.files.x8Tickets, { counter: x8TicketCount, tickets: x8Tickets });
 }
 
-// --- claims ---
+// ===== CLAIMS =====
 let ticketClaims = readJson(cfg.files.claims, {});
 function saveClaims() {
   writeJson(cfg.files.claims, ticketClaims);
 }
 
-// --- done tickets ---
+// ===== DONE TICKETS =====
 let doneTickets = readJson(cfg.files.doneTickets, []);
 function saveDoneTickets() {
   writeJson(cfg.files.doneTickets, doneTickets);
 }
 
-// --- sales ---
-let salesData = readJson(cfg.files.sales, {});
-function saveSales() {
-  writeJson(cfg.files.sales, salesData);
-}
-
-// --- cooldowns ---
+// ===== COOLDOWNS =====
 let staffCooldowns = readJson(cfg.files.cooldowns, {});
 function saveCooldowns() {
   writeJson(cfg.files.cooldowns, staffCooldowns);
 }
 
-// --- game status ---
-const defaultGameStatus = () => ({
-  message_id: null,
-  overall_status: 'working',
-  statuses: Object.fromEntries(cfg.GAME_LIST.map((g) => [g, 'working']))
-});
-
-let gameStatusData = readJson(cfg.files.gameStatus, defaultGameStatus);
-function syncGameListFromStatuses() {
-  const st = gameStatusData.statuses || {};
-  for (const name of Object.keys(st)) {
-    if (!cfg.GAME_LIST.includes(name)) cfg.GAME_LIST.push(name);
-  }
-}
-syncGameListFromStatuses();
-
-function saveGameStatus() {
-  if (!gameStatusData.statuses) gameStatusData.statuses = {};
-  if (!gameStatusData.overall_status) gameStatusData.overall_status = 'working';
-  if (gameStatusData.message_id === undefined) gameStatusData.message_id = null;
-  for (const g of cfg.GAME_LIST) {
-    if (gameStatusData.statuses[g] === undefined) gameStatusData.statuses[g] = 'working';
-  }
-  writeJson(cfg.files.gameStatus, gameStatusData);
-}
-
+// ===== EXPORTS =====
 module.exports = {
-  warns,
-  saveWarns,
-  get warnsRef() {
-    return warns;
-  },
-  setWarns(w) {
-    warns = w;
-  },
-
+  // Tickets
   activeTickets,
   ticketCount,
   saveTickets,
@@ -151,30 +93,14 @@ module.exports = {
     return data;
   },
   isTicketPremium(channelId) {
-    for (const [uid, data] of Object.entries(activeTickets)) {
+    for (const [, data] of Object.entries(activeTickets)) {
       if (typeof data === 'object' && data.channel_id === channelId) return !!data.is_premium;
       if (data === channelId) return false;
     }
     return false;
   },
 
-  midmanTickets,
-  midmanTicketCount,
-  saveMidmanTickets,
-  incrementMidmanTicketCounter() {
-    midmanTicketCount += 1;
-    saveMidmanTickets();
-    return midmanTicketCount;
-  },
-  addMidmanTicket(userId, channelId) {
-    midmanTickets[userId] = channelId;
-    saveMidmanTickets();
-  },
-  removeMidmanTicket(userId) {
-    delete midmanTickets[userId];
-    saveMidmanTickets();
-  },
-
+  // X8 Tickets
   x8Tickets,
   x8TicketCount,
   saveX8Tickets,
@@ -192,6 +118,7 @@ module.exports = {
     saveX8Tickets();
   },
 
+  // Claims
   ticketClaims,
   saveClaims,
   addClaim(channelId, staffId) {
@@ -203,10 +130,10 @@ module.exports = {
     saveClaims();
   },
   getClaim(channelId) {
-    const id = ticketClaims[String(channelId)];
-    return id ? id : null;
+    return ticketClaims[String(channelId)] || null;
   },
 
+  // Done Tickets
   doneTickets,
   saveDoneTickets,
   isTicketDone(channelId) {
@@ -226,38 +153,7 @@ module.exports = {
     }
   },
 
-  salesData,
-  saveSales,
-  addSale(staffId, amount, description = 'Premium Sale') {
-    const key = String(staffId);
-    if (!salesData[key]) salesData[key] = { total: 0, sales: [] };
-    salesData[key].sales.push({
-      amount,
-      description,
-      timestamp: new Date().toISOString()
-    });
-    salesData[key].total += amount;
-    saveSales();
-  },
-  getSales(staffId) {
-    return salesData[String(staffId)] || { total: 0, sales: [] };
-  },
-  resetSales(staffId) {
-    const key = String(staffId);
-    if (salesData[key]) {
-      salesData[key] = { total: 0, sales: [] };
-      saveSales();
-      return true;
-    }
-    return false;
-  },
-
+  // Cooldowns
   staffCooldowns,
-  saveCooldowns,
-
-  gameStatusData,
-  saveGameStatus,
-
-  midmanSessions,
-  midmanTicketContext
+  saveCooldowns
 };
