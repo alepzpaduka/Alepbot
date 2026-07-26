@@ -386,7 +386,7 @@ client.once('ready', async () => {
     status: 'online',
     activities: [
       {
-        name: 'AlepBotXFiqqzr7',
+        name: '⚡ AlepBotTheBest',
         type: 4 // Watching
       },
       {
