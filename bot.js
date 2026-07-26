@@ -1,8 +1,8 @@
 /**
  * AlepzBot — Discord Bot
- * Owner: fiqq
- * Version: 2.0.0 (Clean)
- * Description: Sistem tiket, moderation, cooldown
+ * Owner: Mr. Kholis
+ * Version: 2.0.0 (Full)
+ * Description: Sistem tiket, moderation, cooldown, welcome, leave
  */
 
 require('dotenv').config();
@@ -24,6 +24,8 @@ const cooldown = require('./cooldown');
 const { createTicket } = require('./tickets');
 const ticketHandlers = require('./ticketHandlers');
 const { sendTicketPanel } = require('./ticketPanel');
+const { sendWelcomeMessage, testWelcome } = require('./welcome');
+const { sendLeaveMessage, testLeave } = require('./leave');
 
 const TOKEN = process.env.DISCORD_TOKEN;
 if (!TOKEN) {
@@ -84,6 +86,14 @@ function buildSlashCommands() {
       .setName('resetcooldown')
       .setDescription('[ADMIN] Reset cooldown claim ticket untuk staff')
       .addUserOption((o) => o.setName('staff').setDescription('Staff').setRequired(true))
+      .toJSON(),
+    new SlashCommandBuilder()
+      .setName('testwelcome')
+      .setDescription('[TEST] Hantar mesej selamat datang')
+      .toJSON(),
+    new SlashCommandBuilder()
+      .setName('testleave')
+      .setDescription('[TEST] Hantar mesej selamat tinggal')
       .toJSON()
   ];
 }
@@ -336,11 +346,34 @@ async function handleSlash(interaction) {
     return;
   }
 
+  // ===== TEST WELCOME =====
+  if (commandName === 'testwelcome') {
+    if (!interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
+      await interaction.reply({ content: '❌ Hanya admin yang boleh guna command ini.', ephemeral: true });
+      return;
+    }
+    await testWelcome(interaction);
+    return;
+  }
+
+  // ===== TEST LEAVE =====
+  if (commandName === 'testleave') {
+    if (!interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
+      await interaction.reply({ content: '❌ Hanya admin yang boleh guna command ini.', ephemeral: true });
+      return;
+    }
+    await testLeave(interaction);
+    return;
+  }
+
   await interaction.reply({ content: 'Unknown command.', ephemeral: true });
 }
 
 client.once('ready', async () => {
   console.log(`Logged in as ${client.user.tag}`);
+  console.log(`[BOT] AlepzBot sedia!`);
+  console.log(`[BOT] Welcome & Leave system aktif.`);
+  
   const commands = buildSlashCommands();
   const rest = new REST({ version: '10' }).setToken(TOKEN);
   try {
@@ -355,6 +388,24 @@ client.once('ready', async () => {
     }
   } catch (e) {
     console.error('Failed to register slash commands:', e);
+  }
+});
+
+// ========== EVENT: WELCOME ==========
+client.on('guildMemberAdd', async (member) => {
+  try {
+    await sendWelcomeMessage(member, client);
+  } catch (err) {
+    console.error('[WELCOME] Error:', err);
+  }
+});
+
+// ========== EVENT: LEAVE ==========
+client.on('guildMemberRemove', async (member) => {
+  try {
+    await sendLeaveMessage(member);
+  } catch (err) {
+    console.error('[LEAVE] Error:', err);
   }
 });
 
@@ -396,7 +447,7 @@ client.on('interactionCreate', async (interaction) => {
         return;
       }
       if (id === 'pay_now' || id === cfg.CID_PAY_PREMIUM) {
-        await ticketHandlers.handlePayNow(interaction, store);
+        await ticketHandlers.handlePayNow(interaction);
         return;
       }
       if (id === 'pay_now_x8') {
