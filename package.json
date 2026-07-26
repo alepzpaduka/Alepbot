@@ -1,8 +1,8 @@
 {
-  "name": "vorahub-discord-bot",
-  "version": "1.0.0",
+  "name": "alepzbots",
+  "version": "2.0.0",
   "private": true,
-  "description": "Port of bot.py (discord.py) to discord.js",
+  "description": "AlepzBot — Discord Bot by fiqq",
   "main": "bot.js",
   "type": "commonjs",
   "engines": {
