@@ -1,32 +1,28 @@
 /**
  * AlepzBot — AI Module
- * Owner: fiqq
- * Version: 2.0.0
- * Support: OpenAI, Google Gemini, DeepSeek
+ * Version: 2.0.1 (Stable)
  */
 
 const { OpenAI } = require('openai');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // ===== CONFIGURATION =====
-const AI_PROVIDER = process.env.AI_PROVIDER || 'gemini'; // 'openai', 'gemini', 'deepseek'
-const AI_MODEL = process.env.AI_MODEL || 'gemini-1.5-flash';
+const AI_PROVIDER = process.env.AI_PROVIDER || 'gemini';
+const AI_MODEL = process.env.AI_MODEL || 'gemini-1.5-pro'; // Tukar ke pro
 
 // ===== INITIALIZE CLIENTS =====
 let openai = null;
 let gemini = null;
 
-// OpenAI
 if (process.env.OPENAI_API_KEY) {
   openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
   });
 }
 
-// Google Gemini
 if (process.env.GEMINI_API_KEY) {
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  gemini = genAI.getGenerativeModel({ model: AI_MODEL });
+  gemini = genAI;
 }
 
 // ===== SYSTEM PROMPT =====
@@ -38,7 +34,6 @@ Jawab dengan ringkas, jelas, dan membantu.`;
 
 // ===== AI CHAT FUNCTION =====
 async function chatWithAI(userMessage, history = []) {
-  // Format history untuk context
   const messages = [
     { role: 'system', content: SYSTEM_PROMPT },
     ...history,
@@ -61,14 +56,34 @@ async function chatWithAI(userMessage, history = []) {
 
     // ===== GOOGLE GEMINI =====
     else if (AI_PROVIDER === 'gemini' && gemini) {
-      const chat = gemini.startChat({
-        history: history.map(h => ({
-          role: h.role === 'user' ? 'user' : 'model',
-          parts: [{ text: h.content }]
-        }))
-      });
-      const result = await chat.sendMessage(userMessage);
-      response = result.response.text();
+      // Cuba dengan model yang berbeza
+      const modelsToTry = [
+        AI_MODEL || 'gemini-1.5-pro',
+        'gemini-2.0-flash',
+        'gemini-1.0-pro',
+        'gemini-pro'
+      ];
+      
+      let lastError = null;
+      for (const modelName of modelsToTry) {
+        try {
+          const model = gemini.getGenerativeModel({ model: modelName });
+          const chat = model.startChat({
+            history: history.map(h => ({
+              role: h.role === 'user' ? 'user' : 'model',
+              parts: [{ text: h.content }]
+            }))
+          });
+          const result = await chat.sendMessage(userMessage);
+          response = result.response.text();
+          break;
+        } catch (error) {
+          lastError = error;
+          console.log(`[AI] Model ${modelName} gagal:`, error.message);
+          continue;
+        }
+      }
+      if (!response) throw lastError || new Error('Semua model Gemini gagal');
     }
 
     // ===== FALLBACK =====
@@ -84,9 +99,8 @@ async function chatWithAI(userMessage, history = []) {
   }
 }
 
-// ===== CHAT WITH CONTEXT (untuk conversation) =====
+// ===== CHAT WITH CONTEXT =====
 async function chatWithContext(userId, userMessage) {
-  // Simpan history per user (boleh guna store atau Map)
   if (!global.aiHistory) global.aiHistory = new Map();
   if (!global.aiHistory.has(userId)) {
     global.aiHistory.set(userId, []);
@@ -95,7 +109,6 @@ async function chatWithContext(userId, userMessage) {
   const history = global.aiHistory.get(userId);
   const response = await chatWithAI(userMessage, history);
 
-  // Update history (limit 10 messages)
   history.push({ role: 'user', content: userMessage });
   history.push({ role: 'assistant', content: response });
   if (history.length > 20) {
