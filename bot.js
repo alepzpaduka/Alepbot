@@ -1,6 +1,6 @@
 /**
  * AlepzBot — Discord Bot
- * Owner: Mr. Kholis
+ * Owner: fiqq
  * Version: 2.0.0 (Clean)
  * Description: Sistem tiket, moderation, cooldown
  */
