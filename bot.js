@@ -2,7 +2,7 @@
  * AlepzBot — Discord Bot
  * Owner: Mr. Kholis
  * Version: 2.0.0 (Full)
- * Description: Sistem tiket, moderation, cooldown, welcome, leave
+ * Description: Sistem tiket, moderation, cooldown, welcome, leave, activity
  */
 
 require('dotenv').config();
@@ -373,7 +373,32 @@ client.once('ready', async () => {
   console.log(`Logged in as ${client.user.tag}`);
   console.log(`[BOT] AlepzBot sedia!`);
   console.log(`[BOT] Welcome & Leave system aktif.`);
+
+  // ===== SET ACTIVITY STATUS =====
+  // Activity 1: AlepBotXFiqqzr7 (Watching)
+  client.user.setActivity('AlepBotXFiqqzr7', { type: 4 });
   
+  // Activity 2: AlepzBot Thebest (Watching) - akan timbul bergilir
+  client.user.setActivity('AlepzBot Thebest', { type: 4 });
+
+  // ===== SET PRESENCE =====
+  client.user.setPresence({
+    status: 'online',
+    activities: [
+      {
+        name: 'AlepBotXFiqqzr7',
+        type: 4 // Watching
+      },
+      {
+        name: 'AlepzBot Thebest',
+        type: 4 // Watching
+      }
+    ]
+  });
+
+  console.log(`[BOT] Activity set: AlepBotXFiqqzr7 & AlepzBot Thebest`);
+  console.log(`[BOT] Status: Online`);
+
   const commands = buildSlashCommands();
   const rest = new REST({ version: '10' }).setToken(TOKEN);
   try {
