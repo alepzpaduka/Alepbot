@@ -1,6 +1,9 @@
-﻿/**
- * Ticket creation with Components V2 payloads.
+/**
+ * AlepzBot — Penciptaan Tiket
+ * Pemilik: fiqq
+ * Versi: 2.0.0
  */
+
 const { EmbedBuilder, ChannelType, PermissionFlagsBits } = require('discord.js');
 const cfg = require('./config');
 
@@ -25,12 +28,12 @@ function buildTicketCreatedPayload(userId, categoryName) {
         {
           type: 17,
           components: [
-            { type: 10, content: '# 🎫 Ticket Created — Premium Purchase\n' },
+            { type: 10, content: '# 🎫 Tiket Dibuat — Pembelian Premium\n' },
             { type: 14, spacing: 2 },
             {
               type: 10,
               content:
-                `**Hello <@${userId}>**\n\nYour ticket has been successfully created under the **Premium Purchase** category.\nOur staff will respond as soon as possible.\n\nPlease do not close the ticket until your issue is resolved.\n\n**Ticket Creator:** <@${userId}>\n**Category:** Premium Purchase`
+                `**Hello <@${userId}>**\n\nTiket anda telah berjaya dibuat di bawah kategori **Pembelian Premium**.\nStaff kami akan merespon secepat mungkin.\n\nSila jangan tutup tiket sehingga isu anda selesai.\n\n**Pembuat Tiket:** <@${userId}>\n**Kategori:** Pembelian Premium`
             }
           ]
         },
@@ -40,9 +43,8 @@ function buildTicketCreatedPayload(userId, categoryName) {
             {
               type: 1,
               components: [
-                { style: 3, type: 2, label: 'Claim Ticket', custom_id: cfg.CID_CLAIM_PREMIUM },
-                { style: 1, type: 2, label: 'Bayar Sekarang', custom_id: cfg.CID_PAY_PREMIUM },
-                { style: 4, type: 2, label: 'Close Ticket', custom_id: cfg.CID_CLOSE_PREMIUM }
+                { style: 3, type: 2, label: 'Claim Tiket', custom_id: cfg.CID_CLAIM_PREMIUM },
+                { style: 4, type: 2, label: 'Tutup Tiket', custom_id: cfg.CID_CLOSE_PREMIUM }
               ]
             }
           ]
@@ -63,12 +65,12 @@ function buildTicketCreatedPayload(userId, categoryName) {
       {
         type: 17,
         components: [
-          { type: 10, content: `# 🎫 **Ticket Created — ${categoryName}**\n` },
+          { type: 10, content: `# 🎫 **Tiket Dibuat — ${categoryName}**\n` },
           { type: 14, spacing: 2 },
           {
             type: 10,
             content:
-              `**Hello <@${userId}>,**\n\nYour ticket has been successfully created under the **${categoryName}** category.\nOur staff will respond as soon as possible.\n\nPlease do not close this ticket until your issue has been resolved.\n\n**Ticket Creator:** <@${userId}>\n**Category:** ${categoryName}`
+              `**Hello <@${userId}>,**\n\nTiket anda telah berjaya dibuat di bawah kategori **${categoryName}**.\nStaff kami akan merespon secepat mungkin.\n\nSila jangan tutup tiket sehingga isu anda selesai.\n\n**Pembuat Tiket:** <@${userId}>\n**Kategori:** ${categoryName}`
           }
         ]
       },
@@ -77,7 +79,7 @@ function buildTicketCreatedPayload(userId, categoryName) {
         components: [
           {
             type: 1,
-            components: [{ style: 4, type: 2, label: 'Close Ticket', custom_id: closeIdMap[categoryName] || 'close_ticket' }]
+            components: [{ style: 4, type: 2, label: 'Tutup Tiket', custom_id: closeIdMap[categoryName] || 'close_ticket' }]
           }
         ]
       }
@@ -95,7 +97,7 @@ async function createTicket(interaction, categoryName, store, token) {
       const cid = store.x8Tickets[user.id];
       const ch = guild.channels.cache.get(cid);
       if (ch) {
-        await interaction.reply({ content: `⚠ Kamu masih punya ticket X8 aktif di ${ch}.`, ephemeral: true });
+        await interaction.reply({ content: `⚠ Anda masih ada tiket X8 aktif di ${ch}.`, ephemeral: true });
         return;
       }
       store.removeX8Ticket(user.id);
@@ -106,7 +108,7 @@ async function createTicket(interaction, categoryName, store, token) {
     const chId = store.getTicketChannel(user.id);
     const ch = chId ? guild.channels.cache.get(chId) : null;
     if (ch) {
-      await interaction.reply({ content: `⚠ Kamu masih punya ticket aktif di ${ch}.`, ephemeral: true });
+      await interaction.reply({ content: `⚠ Anda masih ada tiket aktif di ${ch}.`, ephemeral: true });
       return;
     }
     store.removeTicket(user.id);
@@ -171,27 +173,26 @@ async function createTicket(interaction, categoryName, store, token) {
 
   if (isX8) {
     await ticketChannel.send({
-      content: `# 🎫 Ticket Created — X8 Ticket\n\nHello ${user}, ticket kamu sudah dibuat.`
+      content: `# 🎫 Tiket Dibuat — Tiket X8\n\nHello ${user}, tiket anda sudah dibuat.`
     });
   } else {
     const payload = buildTicketCreatedPayload(user.id, categoryName);
     const [ok, , err] = await sendV2ToChannel(token, ticketChannel.id, payload);
     if (!ok) {
-      await ticketChannel.send({ content: `# 🎫 Ticket Created — ${categoryName}\n\nHello ${user}, ticket kamu sudah dibuat.\n(V2 fallback)\n${err}` });
+      await ticketChannel.send({ content: `# 🎫 Tiket Dibuat — ${categoryName}\n\nHello ${user}, tiket anda sudah dibuat.\n(V2 fallback)\n${err}` });
     }
   }
 
-  await interaction.reply({ content: `🎫 Ticket kamu sudah dibuat: ${ticketChannel}`, ephemeral: true });
+  await interaction.reply({ content: `🎫 Tiket anda sudah dibuat: ${ticketChannel}`, ephemeral: true });
 
   const log = guild.channels.cache.get(cfg.TICKET_LOG_CHANNEL_ID);
   if (log) {
     await log.send({
       embeds: [
         new EmbedBuilder()
-          .setTitle('📩 Ticket Dibuat')
-          .setColor(cfg.VORA_BLUE)
-          .setDescription(`**User:** ${user}\n**Kategori:** ${categoryName}\n\n📌 **Channel:** ${ticketChannel}`)
-          .setFooter({ text: 'Vora Hub Ticket System • Ticket Log' })
+          .setTitle('📩 Tiket Dibuat')
+          .setDescription(`**Pengguna:** ${user}\n**Kategori:** ${categoryName}\n\n📌 **Saluran:** ${ticketChannel}`)
+          .setFooter({ text: 'AlepzBot Sistem Tiket • Log Tiket' })
       ]
     });
   }
