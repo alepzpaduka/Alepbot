@@ -2,7 +2,7 @@
  * AlepzBot — Discord Bot
  * Owner: fiqq
  * Version: 2.0.0 (Full - Tanpa AI)
- * Description: Sistem tiket, moderation, cooldown, welcome, leave, activity, avatar
+ * Description: Sistem tiket, moderation, cooldown, welcome, leave, activity, avatar, reaction panel
  */
 
 require('dotenv').config();
@@ -30,6 +30,7 @@ const { sendTicketPanel } = require('./ticketPanel');
 const { sendWelcomeMessage, testWelcome } = require('./welcome');
 const { sendLeaveMessage, testLeave } = require('./leave');
 const { handleGetAvatar } = require('./getavatar');
+const { sendReactionPanel, handleReactionButtons } = require('./reactionPanel');
 
 const TOKEN = process.env.DISCORD_TOKEN;
 if (!TOKEN) {
@@ -86,6 +87,10 @@ function buildSlashCommands() {
       .setDescription('Send the ticket creation panel.')
       .toJSON(),
     new SlashCommandBuilder()
+      .setName('reactionpanel')
+      .setDescription('[ADMIN] Hantar panel reaction role')
+      .toJSON(),
+    new SlashCommandBuilder()
       .setName('add')
       .setDescription('Tambah user ke ticket ini')
       .addUserOption((o) => o.setName('user').setDescription('User').setRequired(true))
@@ -137,6 +142,19 @@ async function handleSlash(interaction) {
   // ===== GETAVATAR =====
   if (commandName === 'getavatar') {
     await handleGetAvatar(interaction);
+    return;
+  }
+
+  // ===== REACTION PANEL =====
+  if (commandName === 'reactionpanel') {
+    if (!interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
+      await interaction.reply({ 
+        content: '❌ Hanya admin yang boleh guna command ini.', 
+        ephemeral: true 
+      });
+      return;
+    }
+    await sendReactionPanel(interaction);
     return;
   }
 
@@ -393,6 +411,7 @@ client.once('ready', async () => {
   console.log(`[BOT] AlepzBot sedia!`);
   console.log(`[BOT] Welcome & Leave system aktif.`);
   console.log(`[BOT] GetAvatar system aktif.`);
+  console.log(`[BOT] Reaction Panel system aktif.`);
 
   // ===== SET ACTIVITY STATUS =====
   client.user.setActivity('AlepBotXFiqqzr7', { type: 4 });
@@ -453,6 +472,12 @@ client.on('interactionCreate', async (interaction) => {
 
     if (interaction.isButton()) {
       const id = interaction.customId;
+      
+      // ===== REACTION PANEL BUTTONS =====
+      const handled = await handleReactionButtons(interaction);
+      if (handled) return;
+
+      // ===== TICKET BUTTONS =====
       if (id === 'ticket_premium' || id === cfg.CID_TICKET_PURCHASE) {
         await createTicket(interaction, 'Premium Purchase', store, TOKEN);
         return;
