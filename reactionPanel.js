@@ -6,6 +6,9 @@
 
 const cfg = require('./config');
 
+// ===== ALEPBOT ICON =====
+const ALEPBOT_ICON = 'https://www.image2url.com/r2/default/images/1779079676715-cb48ada2-85fe-4f0f-bba8-411ce270c94d.jpg';
+
 // ===== REACTION ROLE DATA =====
 const REACTION_ROLE = {
     emoji: '🎯',
@@ -18,30 +21,41 @@ function buildReactionPanelPayload(role) {
     return {
         components: [
             {
-                type: 17,
+                type: 1,
                 components: [
                     {
-                        type: 9,
-                        components: [
-                            {
-                                type: 10,
-                                content: `# 🎮 DAPATKAN ROLE\n\nKlik butang di bawah untuk dapatkan role!\n\n**${role.emoji} - ${role.name}**\n\nKlik sekali = Dapat role\nKlik sekali lagi = Buang role`
-                            }
-                        ]
-                    },
-                    {
-                        type: 1,
-                        components: [
-                            {
-                                type: 2,
-                                style: 2,
-                                label: role.name,
-                                custom_id: `reaction_role_${role.id}`,
-                                emoji: { name: role.emoji }
-                            }
-                        ]
+                        type: 2,
+                        style: 2,
+                        label: role.name,
+                        custom_id: `reaction_role_${role.id}`,
+                        emoji: {
+                            name: role.emoji
+                        }
                     }
                 ]
+            }
+        ],
+        embeds: [
+            {
+                title: '🎮 DAPATKAN ROLE',
+                description: [
+                    'Klik butang di bawah untuk dapatkan role!',
+                    '',
+                    `**${role.emoji} - ${role.name}**`,
+                    '',
+                    'Klik sekali = Dapat role',
+                    'Klik sekali lagi = Buang role',
+                    '',
+                    'AlepzBot • Reaction Panel'
+                ].join('\n'),
+                color: 0x5865F2,
+                thumbnail: {
+                    url: ALEPBOT_ICON
+                },
+                footer: {
+                    text: 'AlepzBot • Reaction Panel',
+                    icon_url: ALEPBOT_ICON
+                }
             }
         ]
     };
@@ -121,5 +135,6 @@ async function handleReactionButtons(interaction) {
 module.exports = {
     sendReactionPanel,
     handleReactionButtons,
-    REACTION_ROLE
+    REACTION_ROLE,
+    ALEPBOT_ICON
 };
