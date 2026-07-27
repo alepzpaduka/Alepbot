@@ -2,7 +2,7 @@
  * AlepzBot — Discord Bot
  * Owner: fiqq
  * Version: 2.0.0 (Full - Tanpa AI)
- * Description: Sistem tiket, moderation, cooldown, welcome, leave, activity, avatar, reaction panel
+ * Description: Sistem tiket, moderation, cooldown, welcome, leave, activity, avatar, reaction panel, rules panel
  */
 
 require('dotenv').config();
@@ -31,6 +31,7 @@ const { sendWelcomeMessage, testWelcome } = require('./welcome');
 const { sendLeaveMessage, testLeave } = require('./leave');
 const { handleGetAvatar } = require('./getavatar');
 const { sendReactionPanel, handleReactionButtons } = require('./reactionPanel');
+const { sendRulesPanel, handleRulesButtons } = require('./rules');
 
 const TOKEN = process.env.DISCORD_TOKEN;
 if (!TOKEN) {
@@ -55,6 +56,14 @@ function buildSlashCommands() {
           .setDescription('Pilih user (kosong = diri sendiri)')
           .setRequired(false)
       )
+      .toJSON(),
+    new SlashCommandBuilder()
+      .setName('rulespanel')
+      .setDescription('[ADMIN] Hantar panel peraturan')
+      .toJSON(),
+    new SlashCommandBuilder()
+      .setName('reactionpanel')
+      .setDescription('[ADMIN] Hantar panel reaction role')
       .toJSON(),
     new SlashCommandBuilder()
       .setName('kick')
@@ -85,10 +94,6 @@ function buildSlashCommands() {
     new SlashCommandBuilder()
       .setName('ticketpanel')
       .setDescription('Send the ticket creation panel.')
-      .toJSON(),
-    new SlashCommandBuilder()
-      .setName('reactionpanel')
-      .setDescription('[ADMIN] Hantar panel reaction role')
       .toJSON(),
     new SlashCommandBuilder()
       .setName('add')
@@ -142,6 +147,19 @@ async function handleSlash(interaction) {
   // ===== GETAVATAR =====
   if (commandName === 'getavatar') {
     await handleGetAvatar(interaction);
+    return;
+  }
+
+  // ===== RULES PANEL =====
+  if (commandName === 'rulespanel') {
+    if (!interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
+      await interaction.reply({ 
+        content: '❌ Hanya admin yang boleh guna command ini.', 
+        ephemeral: true 
+      });
+      return;
+    }
+    await sendRulesPanel(interaction);
     return;
   }
 
@@ -412,6 +430,7 @@ client.once('ready', async () => {
   console.log(`[BOT] Welcome & Leave system aktif.`);
   console.log(`[BOT] GetAvatar system aktif.`);
   console.log(`[BOT] Reaction Panel system aktif.`);
+  console.log(`[BOT] Rules Panel system aktif.`);
 
   // ===== SET ACTIVITY STATUS =====
   client.user.setActivity('AlepBotXFiqqzr7', { type: 4 });
@@ -473,9 +492,13 @@ client.on('interactionCreate', async (interaction) => {
     if (interaction.isButton()) {
       const id = interaction.customId;
       
+      // ===== RULES PANEL BUTTONS =====
+      const rulesHandled = await handleRulesButtons(interaction, store);
+      if (rulesHandled) return;
+
       // ===== REACTION PANEL BUTTONS =====
-      const handled = await handleReactionButtons(interaction);
-      if (handled) return;
+      const reactionHandled = await handleReactionButtons(interaction);
+      if (reactionHandled) return;
 
       // ===== TICKET BUTTONS =====
       if (id === 'ticket_premium' || id === cfg.CID_TICKET_PURCHASE) {
