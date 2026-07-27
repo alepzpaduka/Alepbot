@@ -16,7 +16,7 @@ const REACTION_ROLE = {
     role_id: '1483807325079867452'
 };
 
-// ===== BUILD REACTION PANEL PAYLOAD (COMPONENTS V2) =====
+// ===== BUILD REACTION PANEL PAYLOAD =====
 function buildReactionPanelPayload(role) {
     return {
         components: [
@@ -27,10 +27,8 @@ function buildReactionPanelPayload(role) {
                         type: 2,
                         style: 2,
                         label: role.name,
-                        custom_id: `reaction_role_${role.id}`,
-                        emoji: {
-                            name: role.emoji
-                        }
+                        custom_id: `reaction_role_${role.id}`
+                        // EMOJI DIKELUARKAN DULU
                     }
                 ]
             }
