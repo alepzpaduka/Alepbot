@@ -7,7 +7,7 @@
 const cfg = require('./config');
 
 // ===== ALEPBOT ICON =====
-const ALEPBOT_ICON = 'https://www.image2url.com/r2/default/images/1779079676715-cb48ada2-85fe-4f0f-bba8-411ce270c94d.jpg';
+const ALEPBOT_ICON = 'https://files.catbox.moe/sfh2tk.jpg';
 
 // ===== REACTION ROLE DATA =====
 const REACTION_ROLE = {
@@ -29,7 +29,7 @@ function buildReactionPanelPayload(role) {
                         components: [
                             {
                                 type: 10,
-                                content: `# 🎮 DAPATKAN ROLE\n\nKlik butang di bawah untuk dapatkan role!\n\n**${role.emoji} - ${role.name}**\n\nKlik sekali = Dapat role\nKlik sekali lagi = Buang role`
+                                content: `# DAPATKAN ROLE\n\nKlik butang di bawah untuk dapatkan role!\n\n**${role.emoji} - ${role.name}**\n\nKlik sekali`
                             }
                         ],
                         accessory: {
