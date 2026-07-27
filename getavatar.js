@@ -1,21 +1,22 @@
 /**
  * AlepzBot — GetAvatar Module
- * Owner:fiqq
- * Version: 2.0.0
+ * Owner: fiqq
+ * Version: 2.0.1
  */
 
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
 async function handleGetAvatar(interaction) {
+  // Defer reply first untuk elak timeout
+  await interaction.deferReply();
+  
   const targetUser = interaction.options.getUser('user') || interaction.user;
   
-  // Dapatkan avatar dengan pelbagai saiz
   const avatarURL = targetUser.displayAvatarURL({ size: 1024, dynamic: true });
   const avatarURL512 = targetUser.displayAvatarURL({ size: 512, dynamic: true });
   const avatarURL256 = targetUser.displayAvatarURL({ size: 256, dynamic: true });
   const avatarURL128 = targetUser.displayAvatarURL({ size: 128, dynamic: true });
   
-  // Dapatkan banner (jika ada)
   let bannerURL = null;
   try {
     const user = await interaction.client.users.fetch(targetUser.id, { force: true });
@@ -24,14 +25,12 @@ async function handleGetAvatar(interaction) {
     }
   } catch (_) {}
   
-  // Tarikh akaun dibuat
   const createdAt = targetUser.createdAt.toLocaleDateString('ms-MY', {
     day: 'numeric',
     month: 'long',
     year: 'numeric'
   });
   
-  // Bina embed
   const embed = new EmbedBuilder()
     .setTitle(`🖼️ Avatar ${targetUser.username}`)
     .setDescription(
@@ -47,7 +46,6 @@ async function handleGetAvatar(interaction) {
     })
     .setTimestamp();
   
-  // Button untuk pelbagai saiz
   const row = new ActionRowBuilder()
     .addComponents(
       new ButtonBuilder()
@@ -68,7 +66,6 @@ async function handleGetAvatar(interaction) {
         .setURL(avatarURL)
     );
   
-  // Jika ada banner, tambah field
   if (bannerURL) {
     embed.addFields({ 
       name: '🖼️ Banner', 
@@ -77,8 +74,7 @@ async function handleGetAvatar(interaction) {
     });
   }
   
-  // Hantar response
-  await interaction.reply({ embeds: [embed], components: [row] });
+  await interaction.editReply({ embeds: [embed], components: [row] });
 }
 
 module.exports = { handleGetAvatar };
