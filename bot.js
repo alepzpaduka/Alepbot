@@ -2,7 +2,7 @@
  * AlepzBot — Discord Bot
  * Owner: fiqq
  * Version: 2.0.0 (Full - Tanpa AI)
- * Description: Sistem tiket, moderation, cooldown, welcome, leave, activity, avatar, reaction panel, rules panel
+ * Description: Sistem tiket, moderation, cooldown, welcome, leave, activity, avatar, reaction panel, rules panel, clearchat
  */
 
 require('dotenv').config();
@@ -32,6 +32,7 @@ const { sendLeaveMessage, testLeave } = require('./leave');
 const { handleGetAvatar } = require('./getavatar');
 const { sendReactionPanel, handleReactionButtons } = require('./reactionPanel');
 const { sendRulesPanel, handleRulesButtons } = require('./rules');
+const { clearChat } = require('./clearchat');
 
 const TOKEN = process.env.DISCORD_TOKEN;
 if (!TOKEN) {
@@ -64,6 +65,17 @@ function buildSlashCommands() {
     new SlashCommandBuilder()
       .setName('reactionpanel')
       .setDescription('[ADMIN] Hantar panel reaction role')
+      .toJSON(),
+    new SlashCommandBuilder()
+      .setName('clearchat')
+      .setDescription('Padam mesej dalam channel ini')
+      .addIntegerOption((o) =>
+        o.setName('amount')
+          .setDescription('Bilangan mesej (max 1000)')
+          .setMinValue(1)
+          .setMaxValue(1000)
+          .setRequired(false)
+      )
       .toJSON(),
     new SlashCommandBuilder()
       .setName('kick')
@@ -173,6 +185,19 @@ async function handleSlash(interaction) {
       return;
     }
     await sendReactionPanel(interaction);
+    return;
+  }
+
+  // ===== CLEARCHAT =====
+  if (commandName === 'clearchat') {
+    if (!interaction.memberPermissions.has(PermissionFlagsBits.ManageMessages)) {
+      await interaction.reply({ 
+        content: '❌ Anda tiada permission **Manage Messages** untuk guna command ini.', 
+        ephemeral: true 
+      });
+      return;
+    }
+    await clearChat(interaction);
     return;
   }
 
@@ -431,6 +456,7 @@ client.once('ready', async () => {
   console.log(`[BOT] GetAvatar system aktif.`);
   console.log(`[BOT] Reaction Panel system aktif.`);
   console.log(`[BOT] Rules Panel system aktif.`);
+  console.log(`[BOT] ClearChat system aktif.`);
 
   // ===== SET ACTIVITY STATUS =====
   client.user.setActivity('AlepBotXFiqqzr7', { type: 4 });
