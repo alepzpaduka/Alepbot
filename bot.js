@@ -2,7 +2,7 @@
  * AlepzBot — Discord Bot
  * Owner: fiqq
  * Version: 2.0.0 (Full - Tanpa AI)
- * Description: Sistem tiket, moderation, cooldown, welcome, leave, activity
+ * Description: Sistem tiket, moderation, cooldown, welcome, leave, activity, avatar
  */
 
 require('dotenv').config();
@@ -15,7 +15,10 @@ const {
   EmbedBuilder,
   PermissionFlagsBits,
   REST,
-  Routes
+  Routes,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle
 } = require('discord.js');
 
 const cfg = require('./config');
@@ -26,9 +29,7 @@ const ticketHandlers = require('./ticketHandlers');
 const { sendTicketPanel } = require('./ticketPanel');
 const { sendWelcomeMessage, testWelcome } = require('./welcome');
 const { sendLeaveMessage, testLeave } = require('./leave');
-
-// ===== BUANG AI REQUIRE =====
-// const { chatWithContext, clearAIHistory, testAI } = require('./ai'); ← DELETE
+const { handleGetAvatar } = require('./getavatar');
 
 const TOKEN = process.env.DISCORD_TOKEN;
 if (!TOKEN) {
@@ -45,10 +46,15 @@ function buildSlashCommands() {
       .setDescription('Chat Anything With A Bot.')
       .addStringOption((o) => o.setName('messages').setDescription('Message').setRequired(true))
       .toJSON(),
-    // ===== BUANG AI COMMANDS =====
-    // new SlashCommandBuilder().setName('ai')... ← DELETE
-    // new SlashCommandBuilder().setName('aiclear')... ← DELETE
-    // new SlashCommandBuilder().setName('testai')... ← DELETE
+    new SlashCommandBuilder()
+      .setName('getavatar')
+      .setDescription('Dapatkan avatar user')
+      .addUserOption((o) => 
+        o.setName('user')
+          .setDescription('Pilih user (kosong = diri sendiri)')
+          .setRequired(false)
+      )
+      .toJSON(),
     new SlashCommandBuilder()
       .setName('kick')
       .setDescription('Kicks a member from the server.')
@@ -128,10 +134,11 @@ async function handleSlash(interaction) {
     return;
   }
 
-  // ===== BUANG AI HANDLERS =====
-  // if (commandName === 'ai') { ... } ← DELETE
-  // if (commandName === 'aiclear') { ... } ← DELETE
-  // if (commandName === 'testai') { ... } ← DELETE
+  // ===== GETAVATAR =====
+  if (commandName === 'getavatar') {
+    await handleGetAvatar(interaction);
+    return;
+  }
 
   if (commandName === 'kick') {
     if (!interaction.memberPermissions.has(PermissionFlagsBits.KickMembers)) {
@@ -385,6 +392,7 @@ client.once('ready', async () => {
   console.log(`Logged in as ${client.user.tag}`);
   console.log(`[BOT] AlepzBot sedia!`);
   console.log(`[BOT] Welcome & Leave system aktif.`);
+  console.log(`[BOT] GetAvatar system aktif.`);
 
   // ===== SET ACTIVITY STATUS =====
   client.user.setActivity('AlepBotXFiqqzr7', { type: 4 });
@@ -400,9 +408,6 @@ client.once('ready', async () => {
 
   console.log(`[BOT] Activity set: AlepBotXFiqqzr7 & AlepzBot Thebest`);
   console.log(`[BOT] Status: Online`);
-
-  // ===== BUANG AI TEST =====
-  // try { await testAI(); } ← DELETE
 
   const commands = buildSlashCommands();
   const rest = new REST({ version: '10' }).setToken(TOKEN);
