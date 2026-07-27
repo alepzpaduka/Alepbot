@@ -22,14 +22,12 @@ async function getOrCreateRole(guild) {
     const roleName = REACTION_ROLE.role_name;
     const roleId = REACTION_ROLE.role_id;
     
-    // Cari role dari ID
     let role = guild.roles.cache.get(roleId);
     if (role) {
         console.log(`[REACTION] Found role: ${roleName} (${roleId})`);
         return role;
     }
     
-    // Fallback: cari by name
     role = guild.roles.cache.find(r => r.name === roleName);
     if (!role) {
         try {
@@ -49,34 +47,66 @@ async function getOrCreateRole(guild) {
 // ===== BUILD REACTION PANEL PAYLOAD (COMPONENTS V2) =====
 function buildReactionPanelPayload(role) {
     return {
-        embeds: [{
-            title: '🎮 DAPATKAN ROLE',
-            description: [
-                'Klik butang di bawah untuk mendapatkan role!',
-                '',
-                `**${role.emoji} - ${role.name}**`,
-                '',
-                '**Klik sekali = Dapat role**',
-                '**Klik sekali lagi = Buang role**',
-                '',
-                'AlepzBot • Reaction Panel'
-            ].join('\n'),
-            color: 0x5865F2,
-            thumbnail: { url: ALEPBOT_ICON },
-            footer: { text: 'AlepzBot • Reaction Panel', icon_url: ALEPBOT_ICON }
-        }],
+        flags: 32768,  // EPHEMERAL
         components: [
             {
-                type: 1,
+                type: 17,
                 components: [
                     {
-                        type: 2,
-                        style: 2,
-                        label: role.name,
-                        custom_id: `reaction_role_${role.id}`,
-                        emoji: {
-                            name: role.emoji
+                        type: 9,
+                        components: [
+                            {
+                                type: 10,
+                                content: [
+                                    '# 🎮 DAPATKAN ROLE',
+                                    '',
+                                    'Klik butang di bawah untuk mendapatkan role!',
+                                    '',
+                                    `**${role.emoji} - ${role.name}**`,
+                                    '',
+                                    '**Klik sekali = Dapat role**',
+                                    '**Klik sekali lagi = Buang role**',
+                                    '',
+                                    'AlepzBot • Reaction Panel'
+                                ].join('\n')
+                            }
+                        ],
+                        accessory: {
+                            type: 11,
+                            media: {
+                                url: ALEPBOT_ICON
+                            }
                         }
+                    },
+                    { type: 14, spacing: 2 },
+                    {
+                        type: 10,
+                        content: [
+                            '📌 **Cara Guna:**',
+                            '1. Klik butang di bawah',
+                            '2. Role akan diberikan/dikeluarkan secara automatik',
+                            '',
+                            '💡 **Nota:** Anda boleh toggle role bila-bila masa'
+                        ].join('\n')
+                    }
+                ]
+            },
+            {
+                type: 17,
+                components: [
+                    {
+                        type: 1,
+                        components: [
+                            {
+                                type: 2,
+                                style: 2,
+                                label: role.name,
+                                custom_id: `reaction_role_${role.id}`,
+                                emoji: {
+                                    name: role.emoji
+                                }
+                            }
+                        ]
                     }
                 ]
             }
@@ -119,7 +149,6 @@ async function sendReactionPanel(interaction) {
         return;
     }
 
-    // Tambah emoji ke role object
     role.emoji = REACTION_ROLE.emoji;
 
     const payload = buildReactionPanelPayload(role);
@@ -176,16 +205,6 @@ async function handleReactionButtons(interaction) {
     return false;
 }
 
-// ===== COMMAND BUILDER =====
-function buildReactionCommand() {
-    return {
-        name: 'reactionpanel',
-        description: '[ADMIN] Hantar panel reaction role',
-        default_member_permissions: null,
-        dm_permission: false
-    };
-}
-
 module.exports = {
     ALEPBOT_ICON,
     REACTION_ROLE,
@@ -193,6 +212,5 @@ module.exports = {
     buildReactionPanelPayload,
     sendV2ToChannel,
     sendReactionPanel,
-    handleReactionButtons,
-    buildReactionCommand
+    handleReactionButtons
 };
