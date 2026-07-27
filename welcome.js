@@ -82,7 +82,7 @@ async function sendWelcomeMessage(member, client) {
             type: 2,
             style: 5,
             label: '📋 Lihat Peraturan',
-            url: `https://discord.com/channels/${guild.id}/1434782966533324872`
+            url: `https://discord.com/channels/${guild.id}/1531047610625036509`
           },
           {
             type: 2,
@@ -97,7 +97,7 @@ async function sendWelcomeMessage(member, client) {
 
   // Hantar menggunakan V2
   await channel.send({
-    content: `👋 **Selamat datang ${member}!** Sila baca peraturan di <#1434782966533324872>.`,
+    content: `👋 **Selamat datang ${member}!** Sila baca peraturan di <#1531047610625036509>.`,
     embeds: [embed],
     components: payload.components
   });
@@ -106,10 +106,10 @@ async function sendWelcomeMessage(member, client) {
   try {
     await member.send({
       content: `🎉 **Selamat datang ke ${guild.name}, ${member.user.username}!**\n\n` +
-        `Terima kasih kerana menyertai server kami. Sila baca peraturan dan jangan lupa untuk memperkenalkan diri.\n\n` +
+        `Terima kasih kerana menyertai server kami Alepzbot Thebest. Sila baca peraturan dan jangan lupa untuk memperkenalkan diri.\n\n` +
         `📌 **Pautan Penting:**\n` +
-        `• Peraturan: <#1434782966533324872>\n` +
-        `• Sokongan: Buka tiket di <#1434769506798010480>\n\n` +
+        `• Peraturan: <#1531047610625036509>\n` +
+        `• Sokongan: Buka tiket di <#1531043111009124352>\n\n` +
         `Selamat beraktiviti! 🚀`
     });
   } catch (_) {
