@@ -16,44 +16,42 @@ const REACTION_ROLE = {
     role_id: '1483807325079867452'
 };
 
-// ===== BUILD REACTION PANEL PAYLOAD =====
+// ===== BUILD REACTION PANEL PAYLOAD (COMPONENTS V2 - MACAM TICKET) =====
 function buildReactionPanelPayload(role) {
     return {
+        flags: 32768,
         components: [
             {
-                type: 1,
+                type: 17,
                 components: [
                     {
-                        type: 2,
-                        style: 2,
-                        label: role.name,
-                        custom_id: `reaction_role_${role.id}`
-                        // EMOJI DIKELUARKAN DULU
+                        type: 9,
+                        components: [
+                            {
+                                type: 10,
+                                content: `# 🎮 DAPATKAN ROLE\n\nKlik butang di bawah untuk dapatkan role!\n\n**${role.emoji} - ${role.name}**\n\nKlik sekali = Dapat role\nKlik sekali lagi = Buang role`
+                            }
+                        ],
+                        accessory: {
+                            type: 11,
+                            media: {
+                                url: ALEPBOT_ICON
+                            }
+                        }
+                    },
+                    { type: 14, spacing: 2 },
+                    {
+                        type: 1,
+                        components: [
+                            {
+                                type: 2,
+                                style: 2,
+                                label: role.name,
+                                custom_id: `reaction_role_${role.id}`
+                            }
+                        ]
                     }
                 ]
-            }
-        ],
-        embeds: [
-            {
-                title: '🎮 DAPATKAN ROLE',
-                description: [
-                    'Klik butang di bawah untuk dapatkan role!',
-                    '',
-                    `**${role.emoji} - ${role.name}**`,
-                    '',
-                    'Klik sekali = Dapat role',
-                    'Klik sekali lagi = Buang role',
-                    '',
-                    'AlepzBot • Reaction Panel'
-                ].join('\n'),
-                color: 0x5865F2,
-                thumbnail: {
-                    url: ALEPBOT_ICON
-                },
-                footer: {
-                    text: 'AlepzBot • Reaction Panel',
-                    icon_url: ALEPBOT_ICON
-                }
             }
         ]
     };
