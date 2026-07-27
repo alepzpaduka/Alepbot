@@ -38,7 +38,7 @@ function buildRulesPanelPayload() {
                         components: [
                             {
                                 type: 10,
-                                content: `# 📜 PERATURAN SERVER\n\nSila baca dan patuhi semua peraturan di bawah:\n\n${rulesText}\n\n⚠️ **Ingat:**\n• Staff berhak mengambil tindakan jika peraturan dilanggar\n• Jika ada pertanyaan, sila buka tiket di <#1434769506798010480>`
+                                content: `# 📜 PERATURAN SERVER\n\nSila baca dan patuhi semua peraturan di bawah:\n\n${rulesText}\n\n⚠️ **Ingat:**\n• Staff berhak mengambil tindakan jika peraturan dilanggar\n• Jika ada pertanyaan, sila buka tiket di <#1531043111009124352>`
                             }
                         ],
                         accessory: {
