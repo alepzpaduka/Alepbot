@@ -52,7 +52,7 @@ function generalPanelPayload() {
             accessory: {
               type: 11,
               media: {
-                url: 'https://cdn.discordapp.com/attachments/1458860086381510811/1487817042886393966/BG_5_ACC.png?ex=69ca8519&is=69c93399&hm=1f438fd819c1d43f4b0cd7143737a9dbd50960232860e4a0749dd983f0284205&'
+                url: 'https://files.catbox.moe/sfh2tk.jpg'
               }
             }
           },
@@ -70,9 +70,9 @@ function generalPanelPayload() {
           {
             type: 1,
             components: [
-              { style: 2, type: 2, label: 'Pencipta Kandungan', custom_id: cfg.CID_TICKET_CREATOR },
-              { style: 3, type: 2, label: 'Sokongan', custom_id: cfg.CID_TICKET_SUPPORT },
-              { style: 4, type: 2, label: 'Laporan Pepijat', custom_id: cfg.CID_TICKET_REPORT }
+              { style: 2, type: 2, label: 'Nak Role', custom_id: cfg.CID_TICKET_CREATOR },
+              { style: 3, type: 2, label: 'Info Penting', custom_id: cfg.CID_TICKET_SUPPORT },
+              { style: 4, type: 2, label: 'Lapor', custom_id: cfg.CID_TICKET_REPORT }
             ]
           }
         ]
