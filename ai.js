@@ -9,7 +9,6 @@ const { OpenAI } = require('openai');
 // ===== CONFIGURATION =====
 const AI_MODEL = process.env.AI_MODEL || 'gpt-5.6-luna'; 
 const AI_PROVIDER = process.env.AI_PROVIDER || 'ngrok';
-const AI_MODEL = process.env.AI_MODEL || 'gpt-4o-mini';
 
 // ===== INITIALIZE CLIENT =====
 let aiClient = null;
