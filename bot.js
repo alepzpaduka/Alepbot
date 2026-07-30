@@ -1,8 +1,8 @@
 /**
  * AlepzBot — Discord Bot
  * Owner: fiqq
- * Version: 2.0.0 (Full - Tanpa AI)
- * Description: Sistem tiket, moderation, cooldown, welcome, leave, activity, avatar, reaction panel, rules panel, clearchat
+ * Version: 2.0.0 (Full - Dengan AI)
+ * Description: Sistem tiket, moderation, cooldown, welcome, leave, activity, avatar, reaction panel, rules panel, clearchat, AI chat
  */
 
 require('dotenv').config();
@@ -33,6 +33,7 @@ const { handleGetAvatar } = require('./getavatar');
 const { sendReactionPanel, handleReactionButtons } = require('./reactionPanel');
 const { sendRulesPanel, handleRulesButtons } = require('./rules');
 const { clearChat } = require('./clearchat');
+const { chatWithContext, clearAIHistory, testAI } = require('./ai');
 
 const TOKEN = process.env.DISCORD_TOKEN;
 if (!TOKEN) {
@@ -76,6 +77,24 @@ function buildSlashCommands() {
           .setMaxValue(1000)
           .setRequired(false)
       )
+      .toJSON(),
+    new SlashCommandBuilder()
+      .setName('ai')
+      .setDescription('Chat dengan AI AlepzBot')
+      .addStringOption((o) =>
+        o.setName('message')
+          .setDescription('Mesej anda')
+          .setRequired(true)
+          .setMaxLength(2000)
+      )
+      .toJSON(),
+    new SlashCommandBuilder()
+      .setName('aiclear')
+      .setDescription('Kosongkan history chat AI')
+      .toJSON(),
+    new SlashCommandBuilder()
+      .setName('testai')
+      .setDescription('[ADMIN] Uji sambungan AI')
       .toJSON(),
     new SlashCommandBuilder()
       .setName('kick')
@@ -198,6 +217,52 @@ async function handleSlash(interaction) {
       return;
     }
     await clearChat(interaction);
+    return;
+  }
+
+  // ===== AI CHAT =====
+  if (commandName === 'ai') {
+    const message = interaction.options.getString('message', true);
+    await interaction.deferReply({ ephemeral: false });
+
+    try {
+      const response = await chatWithContext(interaction.user.id, message);
+      const finalResponse = response.length > 2000 ? response.slice(0, 1997) + '...' : response;
+      await interaction.editReply(`🤖 **AlepzBot AI:** ${finalResponse}`);
+    } catch (error) {
+      console.error('[AI] Error:', error);
+      await interaction.editReply('❌ Maaf, berlaku ralat. Sila cuba lagi.');
+    }
+    return;
+  }
+
+  // ===== AI CLEAR HISTORY =====
+  if (commandName === 'aiclear') {
+    clearAIHistory(interaction.user.id);
+    await interaction.reply({
+      content: '🧹 **History chat AI telah dikosongkan!**',
+      ephemeral: true
+    });
+    return;
+  }
+
+  // ===== TEST AI =====
+  if (commandName === 'testai') {
+    if (!interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
+      await interaction.reply({ content: '❌ Hanya admin yang boleh guna command ini.', ephemeral: true });
+      return;
+    }
+    await interaction.deferReply({ ephemeral: true });
+    try {
+      const result = await testAI();
+      await interaction.editReply({
+        content: `✅ **AI Test Berjaya!**\n\nResponse: ${result}`
+      });
+    } catch (error) {
+      await interaction.editReply({
+        content: `❌ **AI Test Gagal!**\nError: ${error.message}`
+      });
+    }
     return;
   }
 
@@ -457,6 +522,7 @@ client.once('ready', async () => {
   console.log(`[BOT] Reaction Panel system aktif.`);
   console.log(`[BOT] Rules Panel system aktif.`);
   console.log(`[BOT] ClearChat system aktif.`);
+  console.log(`[BOT] AI System aktif.`);
 
   // ===== SET ACTIVITY STATUS =====
   client.user.setActivity('AlepBotXFiqqzr7', { type: 4 });
@@ -472,6 +538,14 @@ client.once('ready', async () => {
 
   console.log(`[BOT] Activity set: AlepBotXFiqqzr7 & AlepzBot Thebest`);
   console.log(`[BOT] Status: Online`);
+
+  // ===== TEST AI ON STARTUP =====
+  try {
+    await testAI();
+    console.log(`[AI] System berjaya diaktifkan!`);
+  } catch (error) {
+    console.error(`[AI] Gagal diaktifkan:`, error.message);
+  }
 
   const commands = buildSlashCommands();
   const rest = new REST({ version: '10' }).setToken(TOKEN);
