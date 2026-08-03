@@ -16,6 +16,11 @@ module.exports = {
   TICKET_PANEL_PURCHASE_CHANNEL_ID: '',
   TICKET_LOG_CHANNEL_ID: '1531043352320016574',
 
+  // ===== AI CHANNEL CONFIG =====
+AI_CHANNEL_ID: null,  // Akan di set melalui command /setchannelai
+AI_API_URL: 'https://api.nexadev.my.id/ai/chatgptpro?q=Hai%20alepzbot',
+AI_BOT_NAME: 'AlepzBot',
+
   // ===== TICKET CATEGORIES =====
   TICKET_CATEGORY_ID: '1531043528438714538',
   TICKET2_CATEGORY_ID: '1531043528438714538',
