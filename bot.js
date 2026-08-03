@@ -1,8 +1,8 @@
 /**
  * AlepzBot — Discord Bot
  * Owner: fiqq
- * Version: 2.0.0 (Full - Tanpa AI)
- * Description: Sistem tiket, moderation, cooldown, welcome, leave, activity, avatar, reaction panel, rules panel, clearchat
+ * Version: 2.0.0 (Full - Dengan AI Channel)
+ * Description: Sistem tiket, moderation, cooldown, welcome, leave, activity, avatar, reaction panel, rules panel, clearchat, AI channel
  */
 
 require('dotenv').config();
@@ -33,6 +33,7 @@ const { handleGetAvatar } = require('./getavatar');
 const { sendReactionPanel, handleReactionButtons } = require('./reactionPanel');
 const { sendRulesPanel, handleRulesButtons } = require('./rules');
 const { clearChat } = require('./clearchat');
+const { handleAIMessage, setAIChannel, getAIChannelStatus, resetAIChannel } = require('./aichannel');
 
 const TOKEN = process.env.DISCORD_TOKEN;
 if (!TOKEN) {
@@ -76,6 +77,23 @@ function buildSlashCommands() {
           .setMaxValue(1000)
           .setRequired(false)
       )
+      .toJSON(),
+    new SlashCommandBuilder()
+      .setName('setchannelai')
+      .setDescription('[ADMIN] Tetapkan channel untuk AI auto-reply')
+      .addChannelOption((o) =>
+        o.setName('channel')
+          .setDescription('Pilih channel teks')
+          .setRequired(true)
+      )
+      .toJSON(),
+    new SlashCommandBuilder()
+      .setName('aistatus')
+      .setDescription('Lihat status channel AI')
+      .toJSON(),
+    new SlashCommandBuilder()
+      .setName('resetchannelai')
+      .setDescription('[ADMIN] Reset channel AI')
       .toJSON(),
     new SlashCommandBuilder()
       .setName('kick')
@@ -198,6 +216,38 @@ async function handleSlash(interaction) {
       return;
     }
     await clearChat(interaction);
+    return;
+  }
+
+  // ===== SET CHANNEL AI =====
+  if (commandName === 'setchannelai') {
+    if (!interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
+      await interaction.reply({ 
+        content: '❌ Hanya admin yang boleh guna command ini.', 
+        ephemeral: true 
+      });
+      return;
+    }
+    await setAIChannel(interaction);
+    return;
+  }
+
+  // ===== AI STATUS =====
+  if (commandName === 'aistatus') {
+    await getAIChannelStatus(interaction);
+    return;
+  }
+
+  // ===== RESET CHANNEL AI =====
+  if (commandName === 'resetchannelai') {
+    if (!interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
+      await interaction.reply({ 
+        content: '❌ Hanya admin yang boleh guna command ini.', 
+        ephemeral: true 
+      });
+      return;
+    }
+    await resetAIChannel(interaction);
     return;
   }
 
@@ -457,6 +507,7 @@ client.once('ready', async () => {
   console.log(`[BOT] Reaction Panel system aktif.`);
   console.log(`[BOT] Rules Panel system aktif.`);
   console.log(`[BOT] ClearChat system aktif.`);
+  console.log(`[BOT] AI Channel system aktif.`);
 
   // ===== SET ACTIVITY STATUS =====
   client.user.setActivity('AlepBotXFiqqzr7', { type: 4 });
@@ -505,6 +556,15 @@ client.on('guildMemberRemove', async (member) => {
     await sendLeaveMessage(member);
   } catch (err) {
     console.error('[LEAVE] Error:', err);
+  }
+});
+
+// ========== EVENT: MESSAGE (AI AUTO-REPLY) ==========
+client.on('messageCreate', async (message) => {
+  try {
+    await handleAIMessage(message);
+  } catch (error) {
+    console.error('[AI CHANNEL] Error:', error);
   }
 });
 
