@@ -158,13 +158,13 @@ async function handleAIMessage(message) {
                 '📌 **Info:**',
                 '• Nama: AlepzBot',
                 '• Versi: 2.1.0',
-                '• Owner: fiqqzr7',
+                '• Owner: fiqqzr7 Dan Alepz',
                 '• Platform: Discord',
                 '',
                 '💡 *Ada apa-apa lagi yang boleh saya bantu?*'
             ].join('\n'))
             .setColor(0xA855F7)
-            .setThumbnail('https://www.image2url.com/r2/default/gifs/1781644461860-b9ab6b79-4444-4495-9c2f-c43dbde8a3a4.gif')
+            .setThumbnail('')
             .setFooter({ text: 'AlepzBot • Created by fiqqzr7' })
             .setTimestamp();
         
