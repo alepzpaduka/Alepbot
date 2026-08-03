@@ -103,7 +103,7 @@ async function generateImage(prompt) {
             };
         } else {
             // Fallback to another free API
-            const fallbackUrl = `https://api.nexadev.my.id/ai/text2image?prompt=${encodeURIComponent(cleanPrompt)}`;
+            const fallbackUrl = `https://api.nexadev.my.id/ai/imgtopromt?url=${encodeURIComponent(cleanPrompt)}`;
             const fallbackResponse = await fetch(fallbackUrl);
             if (fallbackResponse.ok) {
                 const data = await fallbackResponse.json();
