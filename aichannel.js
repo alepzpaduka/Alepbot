@@ -164,7 +164,7 @@ async function handleAIMessage(message) {
                 '💡 *Ada apa-apa lagi yang boleh saya bantu?*'
             ].join('\n'))
             .setColor(0xA855F7)
-            .setThumbnail('')
+            .setThumbnail('https://www.image2url.com/r2/default/gifs/1781644461860-b9ab6b79-4444-4495-9c2f-c43dbde8a3a4.gif')
             .setFooter({ text: 'AlepzBot • Created by fiqqzr7' })
             .setTimestamp();
         
