@@ -1,8 +1,8 @@
 /**
  * AlepzBot — Discord Bot
  * Owner: fiqq
- * Version: 2.0.0 (Full - Dengan AI Channel)
- * Description: Sistem tiket, moderation, cooldown, welcome, leave, activity, avatar, reaction panel, rules panel, clearchat, AI channel
+ * Version: 2.0.0 (Full - Dengan AI Channel + Gambar)
+ * Description: Sistem tiket, moderation, cooldown, welcome, leave, activity, avatar, reaction panel, rules panel, clearchat, AI channel (gambar + creator)
  */
 
 require('dotenv').config();
@@ -33,7 +33,14 @@ const { handleGetAvatar } = require('./getavatar');
 const { sendReactionPanel, handleReactionButtons } = require('./reactionPanel');
 const { sendRulesPanel, handleRulesButtons } = require('./rules');
 const { clearChat } = require('./clearchat');
-const { handleAIMessage, setAIChannel, getAIChannelStatus, resetAIChannel } = require('./aichannel');
+const { 
+  handleAIMessage, 
+  setAIChannel, 
+  getAIChannelStatus, 
+  resetAIChannel,
+  isImageRequest,
+  isCreatorQuestion
+} = require('./aichannel');
 
 const TOKEN = process.env.DISCORD_TOKEN;
 if (!TOKEN) {
@@ -508,6 +515,8 @@ client.once('ready', async () => {
   console.log(`[BOT] Rules Panel system aktif.`);
   console.log(`[BOT] ClearChat system aktif.`);
   console.log(`[BOT] AI Channel system aktif.`);
+  console.log(`[BOT] AI Image Generator aktif.`);
+  console.log(`[BOT] Creator Info aktif.`);
 
   // ===== SET ACTIVITY STATUS =====
   client.user.setActivity('AlepBotXFiqqzr7', { type: 4 });
